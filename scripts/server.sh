@@ -19,6 +19,7 @@ USER="${SUDO_USER:-${USER}}"
 HOME="${USER_HOME:-${HOME}}"
 SRC_DIR="${BASH_SOURCE%/*}"
 SCRIPT_DESCRIBE="server"
+GITHUB_USER="${GITHUB_USER:-casjay}"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set bash options
 if [[ "$1" == "--debug" ]]; then shift 1 && set -xo pipefail && export SCRIPT_OPTS="--debug" && export _DEBUG="on"; fi
@@ -38,7 +39,7 @@ else
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 [[ "$1" == "--help" ]] && printf_exit "${GREEN}${SCRIPT_DESCRIBE} installer for ubuntu"
-cat /etc/*-release | grep -E 'ID=|ID_LIKE=' | grep -qwE 'ubuntu|debian' &>/dev/null && true || printf_exit "This installer is meant to be run on a ubuntu based system"
+cat /etc/*-release | grep -E 'ID=|ID_LIKE=' | grep -qwE 'ubuntu' &>/dev/null && true || printf_exit "This installer is meant to be run on a ubuntu based system"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 system_service_exists() { systemctl status "$1" 2>&1 | grep -iq "$1" && return 0 || return 1; }
 system_service_enable() { systemctl status "$1" 2>&1 | grep -iq 'inactive' && execute "systemctl enable $1" "Enabling service: $1" || return 1; }
@@ -78,9 +79,14 @@ disable_selinux() {
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ssh_key() {
+  printf_green "Grabbing $GITHUB_USER ssh key"
   [[ -d "/root/.ssh" ]] || mkdir -p "/root/.ssh"
-  urlverify "https://github.com/casjay.keys" &&
-    curl -q -SLs "https://github.com/casjay.keys" | tee "/root/.ssh/authorized_keys" &>/dev/null
+  if urlverify "https://github.com/$GITHUB_USER.keys"; then
+    curl -q -SLs "https://github.com/$GITHUB_USER.keys" | tee "/root/.ssh/authorized_keys" &>/dev/null &&
+      printf_green "Successfully added github ssh key" || printf_return "Failed to add github ssh key"
+  else
+    printf_return "Can not get key from https://github.com/$GITHUB_USER.keys"
+  fi
   return 0
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -91,8 +97,18 @@ retrieve_version_file() { grab_remote_file "https://github.com/casjay-base/ubunt
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 run_grub() {
   printf_green "Setting up grub"
+  local grub_cnf="/boot/grub/grub.cfg"
+  local grub2_cnf="/boot/grub2/grub.cfg"
   rm -Rf /boot/*rescue*
-  devnull grub2-mkconfig -o /boot/grub2/grub.cfg
+  if cmd_exists grub2-mkconfig && [[ -f "$grub2_cnf" ]]; then
+    devnull grub2-mkconfig -o "$grub2_cnf" &&
+      printf_green "Updated $grub2_cnf"
+    printf_return "Failed to update $grub2_cnf"
+  elif cmd_exists grub-mkconfig && [[ -f "$grub_cnf" ]]; then
+    devnull grub-mkconfig -o "$grub_cnf" &&
+      printf_green "Updated $grub_cnf" ||
+      printf_return "Failed to update $grub_cnf"
+  fi
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 run_post() {
@@ -131,6 +147,7 @@ if ! builtin type -P systemmgr &>/dev/null; then
   run_external systemmgr install scripts
   run_update
 fi
+printf_green "Installer has been initialized"
 
 ##################################################################################################################
 printf_head "Disabling selinux"
@@ -148,6 +165,9 @@ if [ -f /etc/makepkg.conf ]; then
     sed -i 's/COMPRESSXZ=(xz -c -z -)/COMPRESSXZ=(xz -c -T '"$numberofcores"' -z -)/g' /etc/makepkg.conf
   fi
 fi
+##################################################################################################################
+printf_head "Grabbing ssh key from github"
+##################################################################################################################
 ssh_key
 ##################################################################################################################
 printf_head "Configuring the system"
@@ -1205,7 +1225,7 @@ echo "$VERSION" >/etc/casjaysdev/updates/versions/configs.txt
 chmod -Rf 664 /etc/casjaysdev/updates/versions/configs.txt
 
 ##################################################################################################################
-printf_head "Finished "
+printf_head "Finished installing for $SCRIPT_DESCRIBE"
 echo ""
 ##################################################################################################################
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
