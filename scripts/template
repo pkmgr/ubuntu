@@ -1,0 +1,247 @@
+#!/usr/bin/env bash
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+##@Version       : 202111041659-git
+# @Author        : Jason Hempstead
+# @Contact       : jason@casjaysdev.com
+# @License       : WTFPL
+# @ReadME        : template.sh --help
+# @Copyright     : Copyright: (c) 2021 Jason Hempstead, Casjays Developments
+# @Created       : Thursday, Nov 04, 2021 16:59 EDT
+# @File          : template.sh
+# @Description   : template installer for ubuntu
+# @TODO          :
+# @Other         :
+# @Resource      :
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+APPNAME="$(basename "$0")"
+VERSION="202111041659-git"
+USER="${SUDO_USER:-${USER}}"
+HOME="${USER_HOME:-${HOME}}"
+SRC_DIR="${BASH_SOURCE%/*}"
+SCRIPT_DESCRIBE="template"
+GITHUB_USER="${GITHUB_USER:-casjay}"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Set bash options
+if [[ "$1" == "--debug" ]]; then shift 1 && set -xo pipefail && export SCRIPT_OPTS="--debug" && export _DEBUG="on"; fi
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Set functions
+SCRIPTSFUNCTURL="${SCRIPTSFUNCTURL:-https://github.com/casjay-dotfiles/scripts/raw/main/functions}"
+SCRIPTSFUNCTDIR="${SCRIPTSFUNCTDIR:-/usr/local/share/CasjaysDev/scripts}"
+SCRIPTSFUNCTFILE="${SCRIPTSFUNCTFILE:-system-installer.bash}"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+if [ -f "../functions/$SCRIPTSFUNCTFILE" ]; then
+  . "../functions/$SCRIPTSFUNCTFILE"
+elif [ -f "$SCRIPTSFUNCTDIR/functions/$SCRIPTSFUNCTFILE" ]; then
+  . "$SCRIPTSFUNCTDIR/functions/$SCRIPTSFUNCTFILE"
+else
+  curl -LSs "$SCRIPTSFUNCTURL/$SCRIPTSFUNCTFILE" -o "/tmp/$SCRIPTSFUNCTFILE" || exit 1
+  . "/tmp/$SCRIPTSFUNCTFILE"
+fi
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+[[ "$1" == "--help" ]] && printf_exit "${GREEN}${SCRIPT_DESCRIBE} installer for ubuntu"
+cat /etc/*-release | grep -E 'ID=|ID_LIKE=' | grep -qwE 'ubuntu' &>/dev/null && true || printf_exit "This installer is meant to be run on a ubuntu based system"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+system_service_exists() { systemctl status "$1" 2>&1 | grep -iq "$1" && return 0 || return 1; }
+system_service_enable() { systemctl status "$1" 2>&1 | grep -iq 'inactive' && execute "systemctl enable $1" "Enabling service: $1" || return 1; }
+system_service_disable() { systemctl status "$1" 2>&1 | grep -iq 'active' && execute "systemctl disable --now $1" "Disabling service: $1" || return 1; }
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+test_pkg() {
+  devnull sudo dpkg-query -l "$1" && printf_success "$1 is installed" && return 0 || return 1
+  setexitstatus
+  set --
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+remove_pkg() {
+  if test_pkg "$1"; then execute "sudo apt-get remove $1" "Removing: $1"; fi
+  setexitstatus
+  set --
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+install_pkg() {
+  if ! test_pkg "$1"; then execute "sudo apt-get install $1" "Installing: $1"; fi
+  setexitstatus
+  set --
+}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+detect_selinux() {
+  builtin command -v selinuxenabled &>/dev/null && selinuxenabled
+  if [ $? -ne 0 ]; then return 0; else return 1; fi
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+disable_selinux() {
+  if builtin command -v selinuxenabled &>/dev/null && selinuxenabled; then
+    printf_blue "Disabling selinux"
+    devnull setenforce 0
+  else
+    printf_green "selinux is already disabled"
+  fi
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ssh_key() {
+  printf_green "Grabbing $GITHUB_USER ssh key"
+  [[ -d "/root/.ssh" ]] || mkdir -p "/root/.ssh"
+  if urlverify "https://github.com/$GITHUB_USER.keys"; then
+    curl -q -SLs "https://github.com/$GITHUB_USER.keys" | tee "/root/.ssh/authorized_keys" &>/dev/null &&
+      printf_green "Successfully added github ssh key" || printf_return "Failed to add github ssh key"
+  else
+    printf_return "Can not get key from https://github.com/$GITHUB_USER.keys"
+  fi
+  return 0
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+run_external() { printf_green "Executing $*" && eval "$*" >/dev/null 2>&1 || return 1; }
+grab_remote_file() { urlverify "$1" && curl -q -SLs "$1" || exit 1; }
+save_remote_file() { urlverify "$1" && curl -q -SLs "$1" | tee "$2" &>/dev/null || exit 1; }
+retrieve_version_file() { grab_remote_file "https://github.com/casjay-base/ubuntu/raw/main/version.txt" | head -n1 || echo "Unknown version"; }
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+run_grub() {
+  printf_green "Setting up grub"
+  local grub_cnf="/boot/grub/grub.cfg"
+  local grub2_cnf="/boot/grub2/grub.cfg"
+  rm -Rf /boot/*rescue*
+  if cmd_exists grub2-mkconfig && [[ -f "$grub2_cnf" ]]; then
+    devnull grub2-mkconfig -o "$grub2_cnf" &&
+      printf_green "Updated $grub2_cnf"
+    printf_return "Failed to update $grub2_cnf"
+  elif cmd_exists grub-mkconfig && [[ -f "$grub_cnf" ]]; then
+    devnull grub-mkconfig -o "$grub_cnf" &&
+      printf_green "Updated $grub_cnf" ||
+      printf_return "Failed to update $grub_cnf"
+  fi
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+run_post() {
+  local e="$*"
+  local m="${e//devnull /}"
+  execute "$e" "executing: $m"
+  setexitstatus
+  set --
+}
+##################################################################################################################
+run_update() {
+  run_external apt clean all
+  run_external apt update
+  run_external apt upgrade -y
+}
+##################################################################################################################
+clear
+ARGS="$*" && shift $#
+##################################################################################################################
+printf_head "Initializing the installer"
+##################################################################################################################
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+if [ -f /etc/casjaysdev/updates/versions/default.txt ]; then
+  printf_red "This has already been installed"
+  printf_red "To reinstall please remove the version file in"
+  printf_exit "/etc/casjaysdev/updates/versions/default.txt"
+fi
+if ! builtin type -P systemmgr &>/dev/null; then
+  if [[ -d "/usr/local/share/CasjaysDev/scripts" ]]; then
+    run_external "git -C https://github.com/casjay-dotfiles/scripts pull"
+  else
+    run_external "git clone https://github.com/casjay-dotfiles/scripts /usr/local/share/CasjaysDev/scripts"
+  fi
+  run_external /usr/local/share/CasjaysDev/scripts/install.sh
+  run_external systemmgr --config &>/dev/null
+  run_external systemmgr install scripts
+  run_update
+fi
+printf_green "Installer has been initialized"
+
+##################################################################################################################
+printf_head "Disabling selinux"
+##################################################################################################################
+disable_selinux
+
+##################################################################################################################
+printf_head "Configuring cores for compiling"
+##################################################################################################################
+numberofcores=$(grep -c ^processor /proc/cpuinfo)
+printf_yellow "Total cores avaliable: $numberofcores"
+if [ -f /etc/makepkg.conf ]; then
+  if [ $numberofcores -gt 1 ]; then
+    sed -i 's/#MAKEFLAGS="-j2"/MAKEFLAGS="-j'$(($numberofcores + 1))'"/g' /etc/makepkg.conf
+    sed -i 's/COMPRESSXZ=(xz -c -z -)/COMPRESSXZ=(xz -c -T '"$numberofcores"' -z -)/g' /etc/makepkg.conf
+  fi
+fi
+##################################################################################################################
+printf_head "Grabbing ssh key from github"
+##################################################################################################################
+ssh_key
+##################################################################################################################
+printf_head "Configuring the system"
+##################################################################################################################
+run_update
+install_pkg vnstat
+system_service_enable vnstat
+install_pkg net-tools
+install_pkg wget
+install_pkg curl
+install_pkg git
+install_pkg nail
+install_pkg e2fsprogs
+install_pkg lsb-release
+install_pkg neovim
+install_pkg unzip
+run_external rm -Rf /tmp/dotfiles
+run_external timedatectl set-timezone America/New_York
+run_update
+run_grub
+
+##################################################################################################################
+printf_head "Installing the packages for $SCRIPT_DESCRIBE"
+##################################################################################################################
+install_pkg build-essential
+
+##################################################################################################################
+printf_head "Fixing packages"
+##################################################################################################################
+run_grub
+rm -Rf /etc/named* /var/named/* /etc/ntp* /etc/cron*/0* /etc/cron*/dailyjobs /var/ftp/uploads /etc/httpd/conf.d/ssl.conf /tmp/configs
+
+##################################################################################################################
+printf_head "setting up config files"
+##################################################################################################################
+
+##################################################################################################################
+printf_head "setting up config files"
+##################################################################################################################
+run_post "systemmgr install scripts"
+run_post "systemmgr install ssl"
+run_post "systemmgr install ssh"
+run_post "systemmgr install tor"
+
+run_post "dfmgr install bash"
+run_post "dfmgr install htop"
+run_post "dfmgr install misc"
+run_post "dfmgr install vifm"
+run_post "dfmgr install vim"
+
+##################################################################################################################
+printf_head "Setting up services"
+##################################################################################################################
+system_service_enable tor.service
+
+##################################################################################################################
+printf_head "Cleaning up"
+##################################################################################################################
+system_service_enable nginx
+/root/bin/changeip.sh >/dev/null 2>&1
+mkdir -p /mnt/backups /var/www/html/.well-known /etc/letsencrypt/live
+
+##################################################################################################################
+printf_info "Installer version: $(retrieve_version_file)"
+##################################################################################################################
+mkdir -p /etc/casjaysdev/updates/versions
+echo "$VERSION" >/etc/casjaysdev/updates/versions/configs.txt
+chmod -Rf 664 /etc/casjaysdev/updates/versions/configs.txt
+
+##################################################################################################################
+printf_head "Finished installing for $SCRIPT_DESCRIBE"
+echo ""
+##################################################################################################################
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+set --
+exit
+# end
