@@ -81,6 +81,7 @@ ssh_key() {
   [[ -d "/root/.ssh" ]] || mkdir -p "/root/.ssh"
   urlverify "https://github.com/casjay.keys" &&
     curl -q -SLs "https://github.com/casjay.keys" | tee "/root/.ssh/authorized_keys" &>/dev/null
+  return 0
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 run_external() { printf_green "Executing $*" && eval "$*" >/dev/null 2>&1 || return 1; }
