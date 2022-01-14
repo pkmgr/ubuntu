@@ -38,7 +38,7 @@ else
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 [[ "$1" == "--help" ]] && printf_exit "${GREEN}${SCRIPT_DESCRIBE} installer for ubuntu"
-cat /etc/*-release | grep 'ID_LIKE=' | grep -E 'debian' &>/dev/null && true || printf_exit "This installer is meant to be run on a ubuntu based system"
+cat /etc/*-release | grep -E 'ID=|ID_LIKE=' | grep -qwE 'ubuntu|debian' &>/dev/null && true || printf_exit "This installer is meant to be run on a ubuntu based system"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 system_service_exists() { systemctl status "$1" 2>&1 | grep -iq "$1" && return 0 || return 1; }
 system_service_enable() { systemctl status "$1" 2>&1 | grep -iq 'inactive' && execute "systemctl enable $1" "Enabling service: $1" || return 1; }
