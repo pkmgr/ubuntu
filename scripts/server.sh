@@ -77,7 +77,12 @@ disable_selinux() {
   fi
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-ssh_key() { save_remote_file "https://github.com/casjay.keys" "/root/.ssh/authorized_keys"; }
+ssh_key() {
+  [[ -d "/root/.ssh" ]] || mkdir -p "/root/.ssh"
+  urlverify "https://github.com/casjay.keys" &&
+    curl -q -SLs "https://github.com/casjay.keys" | tee "/root/.ssh/authorized_keys" &>/dev/null
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 run_external() { printf_green "Executing $*" && eval "$*" >/dev/null 2>&1 || return 1; }
 grab_remote_file() { urlverify "$1" && curl -q -SLs "$1" || exit 1; }
 save_remote_file() { urlverify "$1" && curl -q -SLs "$1" | tee "$2" &>/dev/null || exit 1; }
