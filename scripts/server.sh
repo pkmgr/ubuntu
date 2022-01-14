@@ -1168,13 +1168,16 @@ printf_head "setting up config files"
 ##################################################################################################################
 printf_head "setting up config files"
 ##################################################################################################################
-run_post "dotfiles admin scripts"
+run_post "systemmgr install scripts"
+run_post "systemmgr install ssl"
+run_post "systemmgr install ssh"
+run_post "systemmgr install tor"
 
-run_post "dotfiles install bash"
-run_post "dotfiles install htop"
-run_post "dotfiles install misc"
-run_post "dotfiles install vifm"
-run_post "dotfiles install vim"
+run_post "dfmgr install bash"
+run_post "dfmgr install htop"
+run_post "dfmgr install misc"
+run_post "dfmgr install vifm"
+run_post "dfmgr install vim"
 
 ##################################################################################################################
 printf_head "Setting up services"
