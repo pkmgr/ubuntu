@@ -194,11 +194,7 @@ run_grub
 
 ##################################################################################################################
 printf_head "Installing the packages for $SCRIPT_DESCRIBE"
-##################################################################################################################
-install_pkg accountsservice
-install_pkg adduser
-install_pkg alsa-topology-conf
-install_pkg alsa-ucm-conf
+##################################################################################################################install_pkg adduser
 install_pkg apparmor
 install_pkg apport
 install_pkg apport-symptoms
@@ -218,15 +214,12 @@ install_pkg bind9-host
 install_pkg bind9-libs
 install_pkg bind9-utils
 install_pkg binutils
-install_pkg binutils-aarch64-linux-gnu
 install_pkg binutils-common
 install_pkg bolt
 install_pkg bsdmainutils
 install_pkg bsdutils
 install_pkg btrfs-progs
 install_pkg build-essential
-install_pkg busybox-initramfs
-install_pkg busybox-static
 install_pkg byobu
 install_pkg bzip2
 install_pkg ca-certificates
@@ -242,27 +235,18 @@ install_pkg cloud-guest-utils
 install_pkg cloud-init
 install_pkg cloud-initramfs-copymods
 install_pkg cloud-initramfs-dyn-netconf
-install_pkg command-not-found
 install_pkg console-setup
 install_pkg console-setup-linux
 install_pkg coreutils
 install_pkg cpio
 install_pkg cpp
-install_pkg cpp-9
-install_pkg crda
 install_pkg cron
 install_pkg cryptsetup
 install_pkg cryptsetup-bin
 install_pkg cryptsetup-initramfs
 install_pkg cryptsetup-run
 install_pkg curl
-install_pkg dash
 install_pkg db-util
-install_pkg db5.3-util
-install_pkg dbus
-install_pkg dbus-user-session
-install_pkg dconf-gsettings-backend
-install_pkg dconf-service
 install_pkg debconf
 install_pkg debconf-i18n
 install_pkg debianutils
@@ -284,7 +268,6 @@ install_pkg dovecot-imapd
 install_pkg dovecot-pop3d
 install_pkg dpkg
 install_pkg dpkg-dev
-install_pkg dunst
 install_pkg e2fsprogs
 install_pkg eatmydata
 install_pkg ed
@@ -299,7 +282,6 @@ install_pkg fdisk
 install_pkg file
 install_pkg finalrd
 install_pkg findutils
-install_pkg firewalld
 install_pkg fish
 install_pkg fish-common
 install_pkg flash-kernel
@@ -309,17 +291,10 @@ install_pkg fonts-dejavu-core
 install_pkg fonts-lato
 install_pkg fonts-ubuntu-console
 install_pkg friendly-recovery
-install_pkg ftp
 install_pkg fuse
-install_pkg fwupd
-install_pkg fwupd-signed
 install_pkg g++
-install_pkg g++-9
 install_pkg gawk
 install_pkg gcc
-install_pkg gcc-10-base
-install_pkg gcc-9
-install_pkg gcc-9-base
 install_pkg gdisk
 install_pkg geoip-database
 install_pkg gettext-base
@@ -337,18 +312,9 @@ install_pkg gnupg-l10n
 install_pkg gnupg-utils
 install_pkg gpg
 install_pkg gpg-agent
-install_pkg gpg-wks-client
-install_pkg gpg-wks-server
 install_pkg gpgconf
-install_pkg gpgsm
-install_pkg gpgv
 install_pkg grep
 install_pkg groff-base
-install_pkg grub-common
-install_pkg grub-efi-arm64
-install_pkg grub-efi-arm64-bin
-install_pkg grub2-common
-install_pkg gsettings-desktop-schemas
 install_pkg gzip
 install_pkg hdparm
 install_pkg hostname
@@ -387,7 +353,6 @@ install_pkg krb5-locales
 install_pkg landscape-common
 install_pkg language-selector-common
 install_pkg less
-install_pkg libaccountsservice0
 install_pkg libacl1
 install_pkg libaio1
 install_pkg libalgorithm-c3-perl
@@ -401,8 +366,6 @@ install_pkg libarchive13
 install_pkg libargon2-1
 install_pkg libasan5
 install_pkg libasn1-8-heimdal
-install_pkg libasound2
-install_pkg libasound2-data
 install_pkg libassuan0
 install_pkg libatasmart4
 install_pkg libatm1
@@ -443,7 +406,6 @@ install_pkg libcbor0.6
 install_pkg libcc1-0
 install_pkg libcgi-fast-perl
 install_pkg libcgi-pm-perl
-install_pkg libclamav9
 install_pkg libclass-c3-perl
 install_pkg libclass-c3-xs-perl
 install_pkg libclass-data-inheritable-perl
@@ -879,9 +841,7 @@ install_pkg mtd-utils
 install_pkg mtr-tiny
 install_pkg multipath-tools
 install_pkg mysql-client
-install_pkg mysql-client-core-8.0
 install_pkg mysql-common
-install_pkg mysql-server
 install_pkg nano
 install_pkg ncurses-base
 install_pkg ncurses-bin
@@ -891,14 +851,12 @@ install_pkg netbase
 install_pkg netcat-openbsd
 install_pkg netfilter-persistent
 install_pkg nethogs
-install_pkg netplan.io
 install_pkg networkd-dispatcher
 install_pkg nfs-common
 install_pkg nginx-common
 install_pkg nginx-full
 install_pkg ntfs-3g
 install_pkg ntpdate
-install_pkg open-iscsi
 install_pkg openssh-client
 install_pkg openssh-server
 install_pkg openssh-sftp-server
@@ -954,10 +912,6 @@ install_pkg publicsuffix
 install_pkg python-apt-common
 install_pkg python-is-python2
 install_pkg python-pip-whl
-install_pkg python2
-install_pkg python2-minimal
-install_pkg python2.7
-install_pkg python2.7-minimal
 install_pkg python3
 install_pkg python3-acme
 install_pkg python3-apport
@@ -1166,7 +1120,7 @@ install_pkg apache2
 install_pkg libapache2-mod-fcgid
 install_pkg libapache2-mod-geoip
 install_pkg libapache2-mod-php
-install_pkg mailutils
+install_pkg bsd-mailx
 install_pkg dovecot
 install_pkg postfix
 install_pkg amavisd-new
@@ -1196,7 +1150,8 @@ install_pkg zoo
 printf_head "Fixing packages"
 ##################################################################################################################
 run_grub
-rm -Rf /etc/named* /var/named/* /etc/ntp* /etc/cron*/0* /etc/cron*/dailyjobs /var/ftp/uploads /etc/httpd/conf.d/ssl.conf /tmp/configs
+rm -Rf /etc/named* /var/named/* /etc/ntp* /etc/cron*/0* /etc/cron*/dailyjobs
+rm -Rf /var/ftp/uploads /etc/httpd/conf.d/ssl.conf /tmp/configs
 
 ##################################################################################################################
 printf_head "setting up config files"
@@ -1228,8 +1183,8 @@ printf_head "Cleaning up"
 /root/bin/changeip.sh >/dev/null 2>&1
 mkdir -p /mnt/backups /var/www/html/.well-known /etc/letsencrypt/live
 run_external rm -Rf /tmp/ubuntu-repo
-remove_pkg snap
-remove_pkg snapd
+remove_pkg snap*
+
 ##################################################################################################################
 printf_info "Installer version: $(retrieve_version_file)"
 ##################################################################################################################
