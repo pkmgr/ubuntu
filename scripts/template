@@ -4,11 +4,11 @@
 # @Author        : Jason Hempstead
 # @Contact       : jason@casjaysdev.com
 # @License       : WTFPL
-# @ReadME        : template.sh --help
+# @ReadME        : server.sh --help
 # @Copyright     : Copyright: (c) 2021 Jason Hempstead, Casjays Developments
 # @Created       : Thursday, Nov 04, 2021 16:59 EDT
-# @File          : template.sh
-# @Description   : template installer for ubuntu
+# @File          : server.sh
+# @Description   : server installer for ubuntu
 # @TODO          :
 # @Other         :
 # @Resource      :
@@ -18,7 +18,7 @@ VERSION="202111041659-git"
 USER="${SUDO_USER:-${USER}}"
 HOME="${USER_HOME:-${HOME}}"
 SRC_DIR="${BASH_SOURCE%/*}"
-SCRIPT_DESCRIBE="template"
+SCRIPT_DESCRIBE="server"
 SCRIPT_OS="ubuntu"
 GITHUB_USER="${GITHUB_USER:-casjay}"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -47,19 +47,22 @@ system_service_enable() { systemctl status "$1" 2>&1 | grep -iq 'inactive' && ex
 system_service_disable() { systemctl status "$1" 2>&1 | grep -iq 'active' && execute "systemctl disable --now $1" "Disabling service: $1" || return 1; }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 test_pkg() {
-  devnull sudo dpkg-query -l "$1" && printf_success "$1 is installed" && return 0 || return 1
+  dpkg --get-selections "$1" 2>/dev/null | grep -qw "$1" &&
+    printf_success "$1 is installed" && return 0 || return 1
   setexitstatus
   set --
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 remove_pkg() {
-  if test_pkg "$1"; then execute "sudo apt-get remove $1" "Removing: $1"; fi
+  test_pkg "$1" &>/dev/null &&
+    execute "sudo DEBIAN_FRONTEND=noninteractive apt-get remove $1 -yy" "Removing: $1" ||
+    printf_green "$1 is not installed"
   setexitstatus
   set --
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 install_pkg() {
-  if ! test_pkg "$1"; then execute "sudo apt-get install $1" "Installing: $1"; fi
+  test_pkg "$1" || execute "sudo DEBIAN_FRONTEND=noninteractive apt-get install $1 -yy" "Installing: $1"
   setexitstatus
   set --
 }
@@ -123,7 +126,7 @@ run_post() {
 run_update() {
   run_external apt clean all
   run_external apt update
-  run_external apt upgrade -y
+  run_external apt upgrade -yy
 }
 ##################################################################################################################
 clear
@@ -149,7 +152,8 @@ if ! builtin type -P systemmgr &>/dev/null; then
   run_update
 fi
 printf_green "Installer has been initialized"
-
+git config --show-scope user.name | grep -q '^' || git config --global user.name "$USER"
+git config --show-scope user.email | grep -q '^' || git config --global user.email "$USER@$HOSTNAME"
 ##################################################################################################################
 printf_head "Disabling selinux"
 ##################################################################################################################
@@ -166,10 +170,12 @@ if [ -f /etc/makepkg.conf ]; then
     sed -i 's/COMPRESSXZ=(xz -c -z -)/COMPRESSXZ=(xz -c -T '"$numberofcores"' -z -)/g' /etc/makepkg.conf
   fi
 fi
+
 ##################################################################################################################
 printf_head "Grabbing ssh key from github"
 ##################################################################################################################
 ssh_key
+
 ##################################################################################################################
 printf_head "Configuring the system"
 ##################################################################################################################
@@ -180,10 +186,8 @@ install_pkg net-tools
 install_pkg wget
 install_pkg curl
 install_pkg git
-install_pkg nail
 install_pkg e2fsprogs
 install_pkg lsb-release
-install_pkg neovim
 install_pkg unzip
 run_external rm -Rf /tmp/dotfiles
 run_external timedatectl set-timezone America/New_York
@@ -192,18 +196,13 @@ run_grub
 
 ##################################################################################################################
 printf_head "Installing the packages for $SCRIPT_DESCRIBE"
-##################################################################################################################
-install_pkg build-essential
+##################################################################################################################install_pkg adduser
+install_pkg apt
 
 ##################################################################################################################
 printf_head "Fixing packages"
 ##################################################################################################################
 run_grub
-rm -Rf /etc/named* /var/named/* /etc/ntp* /etc/cron*/0* /etc/cron*/dailyjobs /var/ftp/uploads /etc/httpd/conf.d/ssl.conf /tmp/configs
-
-##################################################################################################################
-printf_head "setting up config files"
-##################################################################################################################
 
 ##################################################################################################################
 printf_head "setting up config files"
@@ -222,14 +221,15 @@ run_post "dfmgr install vim"
 ##################################################################################################################
 printf_head "Setting up services"
 ##################################################################################################################
-system_service_enable tor.service
+#system_service_enable apache2
+#system_service_disable nginx
 
 ##################################################################################################################
 printf_head "Cleaning up"
 ##################################################################################################################
-system_service_enable nginx
 /root/bin/changeip.sh >/dev/null 2>&1
 mkdir -p /mnt/backups /var/www/html/.well-known /etc/letsencrypt/live
+remove_pkg snap*
 
 ##################################################################################################################
 printf_info "Installer version: $(retrieve_version_file)"
