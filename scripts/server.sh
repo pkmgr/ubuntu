@@ -53,13 +53,17 @@ test_pkg() {
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 remove_pkg() {
-  if test_pkg "$1" &>/dev/null; then execute "sudo apt-get remove $1" "Removing: $1"; fi
+  test_pkg "$1" &>/dev/null &&
+    execute "sudo apt-get remove $1" "Removing: $1" ||
+    printf_green "$1 is not installed"
   setexitstatus
   set --
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 install_pkg() {
-  if ! test_pkg "$1"; then execute "sudo apt-get install $1" "Installing: $1"; fi
+  test_pkg "$1" &>/dev/null &&
+    printf_success "$1 is installed" ||
+    execute "sudo apt-get install $1" "Installing: $1"
   setexitstatus
   set --
 }
