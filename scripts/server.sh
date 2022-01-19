@@ -47,7 +47,8 @@ system_service_enable() { systemctl status "$1" 2>&1 | grep -iq 'inactive' && ex
 system_service_disable() { systemctl status "$1" 2>&1 | grep -iq 'active' && execute "systemctl disable --now $1" "Disabling service: $1" || return 1; }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 test_pkg() {
-  dpkg --get-selections "$1" | grep -qw "$1" && printf_success "$1 is installed" && return 0 || return 1
+  dpkg --get-selections "$1" 2>/dev/null | grep -qw "$1" &&
+    printf_success "$1 is installed" && return 0 || return 1
   setexitstatus
   set --
 }
