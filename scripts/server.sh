@@ -732,7 +732,6 @@ install_pkg libpython3-dev
 install_pkg libpython3-stdlib
 install_pkg libpython3.8
 install_pkg libpython3.8-dev
-install_pkg libpython3.8-minimal
 install_pkg libpython3.8-stdlib
 install_pkg libqalculate20
 install_pkg libqalculate20-data
@@ -877,12 +876,9 @@ install_pkg mtd-utils
 install_pkg mtr-tiny
 install_pkg multipath-tools
 install_pkg mysql-client
-install_pkg mysql-client-8.0
 install_pkg mysql-client-core-8.0
 install_pkg mysql-common
 install_pkg mysql-server
-install_pkg mysql-server-8.0
-install_pkg mysql-server-core-8.0
 install_pkg nano
 install_pkg ncurses-base
 install_pkg ncurses-bin
@@ -926,16 +922,16 @@ install_pkg php-mbstring
 install_pkg php-mysql
 install_pkg php-pear
 install_pkg php-xml
-install_pkg php7.4-cgi
-install_pkg php7.4-cli
-install_pkg php7.4-common
-install_pkg php7.4-fpm
-install_pkg php7.4-json
-install_pkg php7.4-mbstring
-install_pkg php7.4-mysql
-install_pkg php7.4-opcache
-install_pkg php7.4-readline
-install_pkg php7.4-xml
+install_pkg php-cgi
+install_pkg php-cli
+install_pkg php-common
+install_pkg php-fpm
+install_pkg php-json
+install_pkg php-mbstring
+install_pkg php-mysql
+install_pkg php-opcache
+install_pkg php-readline
+install_pkg php-xml
 install_pkg pinentry-curses
 install_pkg plymouth
 install_pkg plymouth-theme-ubuntu-text
@@ -1062,8 +1058,8 @@ install_pkg python3-zope.component
 install_pkg python3-zope.event
 install_pkg python3-zope.hookable
 install_pkg python3-zope.interface
-install_pkg python3.8
-install_pkg python3.8-dev
+install_pkg python3.9-full
+install_pkg python3.9-dev
 install_pkg qalc
 install_pkg qrencode
 install_pkg quota
@@ -1081,8 +1077,7 @@ install_pkg ruby-net-telnet
 install_pkg ruby-power-assert
 install_pkg ruby-test-unit
 install_pkg ruby-xmlrpc
-install_pkg ruby2.7
-install_pkg ruby2.7-doc
+install_pkg ruby-dev
 install_pkg rubygems-integration
 install_pkg run-one
 install_pkg sa-compile
@@ -1110,7 +1105,7 @@ install_pkg systemd-timesyncd
 install_pkg sysvinit-utils
 install_pkg tar
 install_pkg tcl-expect
-install_pkg tcl8.6
+install_pkg tcl-dev
 install_pkg tcpdump
 install_pkg telnet
 install_pkg tf
@@ -1192,7 +1187,7 @@ run_post "dfmgr install vim"
 ##################################################################################################################
 printf_head "Setting up services"
 ##################################################################################################################
-run_external https://github.com/casjay-base/ubuntu /tmp/ubuntu-repo
+run_external git clone "https://github.com/casjay-base/ubuntu" "/tmp/ubuntu-repo"
 run_external cp -Rf /tmp/ubuntu-repo/etc/. /etc/
 run_external cp -Rf /tmp/ubuntu-repo/var/. /var/
 system_service_enable tor.service
