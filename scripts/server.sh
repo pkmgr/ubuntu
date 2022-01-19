@@ -61,9 +61,7 @@ remove_pkg() {
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 install_pkg() {
-  test_pkg "$1" &>/dev/null &&
-    printf_success "$1 is installed" ||
-    execute "sudo apt-get install $1" "Installing: $1"
+  test_pkg "$1" || execute "sudo apt-get install $1" "Installing: $1"
   setexitstatus
   set --
 }
@@ -368,7 +366,6 @@ install_pkg iperf
 install_pkg iproute2
 install_pkg ipset
 install_pkg iptables
-install_pkg iptables-persistent
 install_pkg iputils-ping
 install_pkg iputils-tracepath
 install_pkg irqbalance
