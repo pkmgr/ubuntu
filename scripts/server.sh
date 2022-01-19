@@ -180,10 +180,8 @@ install_pkg net-tools
 install_pkg wget
 install_pkg curl
 install_pkg git
-install_pkg nail
 install_pkg e2fsprogs
 install_pkg lsb-release
-install_pkg neovim
 install_pkg unzip
 run_external rm -Rf /tmp/dotfiles
 run_external timedatectl set-timezone America/New_York
@@ -1158,7 +1156,7 @@ install_pkg usb.ids
 install_pkg usbutils
 install_pkg util-linux
 install_pkg uuid-runtime
-install_pkg vim
+install_pkg vim-nox
 install_pkg vim-common
 install_pkg vim-runtime
 install_pkg vim-tiny
@@ -1209,15 +1207,16 @@ run_post "dfmgr install vim"
 ##################################################################################################################
 printf_head "Setting up services"
 ##################################################################################################################
-system_service_enable tor.service
 run_external https://github.com/casjay-base/ubuntu /tmp/ubuntu-repo
 run_external cp -Rf /tmp/ubuntu-repo/etc/. /etc/
 run_external cp -Rf /tmp/ubuntu-repo/var/. /var/
+system_service_enable tor.service
+system_service_enable nginx
+system_service_enable apache2
 
 ##################################################################################################################
 printf_head "Cleaning up"
 ##################################################################################################################
-system_service_enable nginx
 /root/bin/changeip.sh >/dev/null 2>&1
 mkdir -p /mnt/backups /var/www/html/.well-known /etc/letsencrypt/live
 run_external rm -Rf /tmp/ubuntu-repo
