@@ -54,14 +54,14 @@ test_pkg() {
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 remove_pkg() {
   test_pkg "$1" &>/dev/null &&
-    execute "sudo apt-get remove $1" "Removing: $1" ||
+    execute "sudo apt-get remove $1 -yy" "Removing: $1" ||
     printf_green "$1 is not installed"
   setexitstatus
   set --
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 install_pkg() {
-  test_pkg "$1" || execute "sudo apt-get install $1" "Installing: $1"
+  test_pkg "$1" || execute "sudo apt-get install $1 -yy" "Installing: $1"
   setexitstatus
   set --
 }
