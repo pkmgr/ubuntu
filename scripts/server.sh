@@ -62,7 +62,7 @@ remove_pkg() {
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 install_pkg() {
-  test_pkg "$1" || execute "sudo DEBIAN_FRONTEND=noninteractive apt-get install $1 -yy" "Installing: $1"
+  test_pkg "$1" || execute "sudo DEBIAN_FRONTEND=noninteractive apt-get install $1 -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' --ignore-missing -yy -qq --allow-unauthenticated --assume-yes" "Installing: $1"
   setexitstatus
   set --
 }
@@ -124,9 +124,9 @@ run_post() {
 }
 ##################################################################################################################
 run_update() {
-  run_external apt clean all
-  run_external apt update
-  run_external apt upgrade -yy
+  run_external DEBIAN_FRONTEND=noninteractive apt clean all
+  run_external DEBIAN_FRONTEND=noninteractive apt update
+  run_external DEBIAN_FRONTEND=noninteractive apt upgrade -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' --ignore-missing -yy -qq --allow-unauthenticated --assume-yes
 }
 ##################################################################################################################
 clear
