@@ -149,7 +149,8 @@ if ! builtin type -P systemmgr &>/dev/null; then
   run_update
 fi
 printf_green "Installer has been initialized"
-
+git config --show-scope user.name | grep -q '^' || git config --global user.name "$USER"
+git config --show-scope user.email | grep -q '^' || git config --global user.email "$USER@$HOSTNAME"
 ##################################################################################################################
 printf_head "Disabling selinux"
 ##################################################################################################################
@@ -714,7 +715,7 @@ install_pkg libpcre2-32-0
 install_pkg libpcre2-8-0
 install_pkg libpcre3
 install_pkg libperl4-corelibs-perl
-install_pkg libperl5.30
+install_pkg libperl5.32
 install_pkg libpipeline1
 install_pkg libpixman-1-0
 install_pkg libplymouth5
@@ -913,7 +914,7 @@ install_pkg pci.ids
 install_pkg pciutils
 install_pkg perl
 install_pkg perl-base
-install_pkg perl-modules-5.30
+install_pkg perl-modules-5.32
 install_pkg perl-openssl-defaults
 install_pkg php-cgi
 install_pkg php-common
