@@ -1160,6 +1160,35 @@ install_pkg zlib1g
 install_pkg zlib1g-dev
 install_pkg zsh
 install_pkg zsh-common
+install_pkg apache2
+install_pkg libapache2-mod-fcgid
+install_pkg libapache2-mod-geoip
+install_pkg libapache2-mod-php
+install_pkg mailutils
+install_pkg dovecot
+install_pkg postfix
+install_pkg amavisd-new
+install_pkg spamassassin
+install_pkg clamav-daemon
+install_pkg libnet-dns-perl
+install_pkg libmail-spf-perl
+install_pkg pyzor
+install_pkg razor
+install_pkg arj
+install_pkg bzip2
+install_pkg cabextract
+install_pkg cpio
+install_pkg file
+install_pkg gzip
+install_pkg lha
+install_pkg nomarch
+install_pkg pax
+install_pkg rar
+install_pkg unrar
+install_pkg unzip
+install_pkg unzoo
+install_pkg zip
+install_pkg zoo
 
 ##################################################################################################################
 printf_head "Fixing packages"
