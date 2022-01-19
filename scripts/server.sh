@@ -54,19 +54,28 @@ test_pkg() {
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 remove_pkg() {
+  apt() { sudo DEBIAN_FRONTEND=noninteractive apt-get remove $1 -yy; }
   test_pkg "$1" &>/dev/null &&
-    execute "sudo DEBIAN_FRONTEND=noninteractive apt-get remove $1 -yy" "Removing: $1" ||
+    execute "apt install $1" "Removing: $1" ||
     printf_green "$1 is not installed"
   setexitstatus
   set --
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 install_pkg() {
-  test_pkg "$1" || execute "sudo DEBIAN_FRONTEND=noninteractive apt-get install $1 -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' --ignore-missing -yy -qq --allow-unauthenticated --assume-yes" "Installing: $1"
+  apt() { sudo DEBIAN_FRONTEND=noninteractive apt-get install $1 -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' --ignore-missing -yy -qq --allow-unauthenticated --assume-yes; }
+  test_pkg "$1" || execute "apt install $1" "Installing: $1"
   setexitstatus
   set --
 }
-
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+run_update() {
+  export DEBIAN_FRONTEND=noninteractive
+  apt() { eval DEBIAN_FRONTEND=noninteractive apt-get upgrade -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' --ignore-missing -yy -qq --allow-unauthenticated --assume-yes; }
+  run_external apt clean all
+  run_external apt update
+  run_external apt upgrade
+}
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 detect_selinux() {
   builtin command -v selinuxenabled &>/dev/null && selinuxenabled
@@ -121,12 +130,6 @@ run_post() {
   execute "$e" "executing: $m"
   setexitstatus
   set --
-}
-##################################################################################################################
-run_update() {
-  run_external DEBIAN_FRONTEND=noninteractive apt clean all
-  run_external DEBIAN_FRONTEND=noninteractive apt update
-  run_external DEBIAN_FRONTEND=noninteractive apt upgrade -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' --ignore-missing -yy -qq --allow-unauthenticated --assume-yes
 }
 ##################################################################################################################
 clear
