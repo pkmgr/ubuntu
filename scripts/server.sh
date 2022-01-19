@@ -53,7 +53,7 @@ test_pkg() {
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 remove_pkg() {
-  if test_pkg "$1"; then execute "sudo apt-get remove $1" "Removing: $1"; fi
+  if test_pkg "$1" &>/dev/null; then execute "sudo apt-get remove $1" "Removing: $1"; fi
   setexitstatus
   set --
 }
@@ -1200,7 +1200,8 @@ printf_head "Cleaning up"
 /root/bin/changeip.sh >/dev/null 2>&1
 mkdir -p /mnt/backups /var/www/html/.well-known /etc/letsencrypt/live
 run_external rm -Rf /tmp/ubuntu-repo
-
+remove_pkg snap
+remove_pkg snapd
 ##################################################################################################################
 printf_info "Installer version: $(retrieve_version_file)"
 ##################################################################################################################
