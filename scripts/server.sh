@@ -1210,6 +1210,9 @@ run_post "dfmgr install vim"
 printf_head "Setting up services"
 ##################################################################################################################
 system_service_enable tor.service
+run_external https://github.com/casjay-base/ubuntu /tmp/ubuntu-repo
+run_external cp -Rf /tmp/ubuntu-repo/etc/. /etc/
+run_external cp -Rf /tmp/ubuntu-repo/var/. /var/
 
 ##################################################################################################################
 printf_head "Cleaning up"
@@ -1217,6 +1220,7 @@ printf_head "Cleaning up"
 system_service_enable nginx
 /root/bin/changeip.sh >/dev/null 2>&1
 mkdir -p /mnt/backups /var/www/html/.well-known /etc/letsencrypt/live
+run_external rm -Rf /tmp/ubuntu-repo
 
 ##################################################################################################################
 printf_info "Installer version: $(retrieve_version_file)"
