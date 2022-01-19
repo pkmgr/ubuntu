@@ -127,7 +127,7 @@ run_post() {
 run_update() {
   run_external apt clean all
   run_external apt update
-  run_external apt upgrade -y
+  run_external apt upgrade -yy
 }
 ##################################################################################################################
 clear
