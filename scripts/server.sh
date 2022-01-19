@@ -847,20 +847,7 @@ install_pkg libyaml-0-2
 install_pkg libzstd1
 install_pkg links
 install_pkg linux-base
-install_pkg linux-headers-5.11.0-1022-oracle
-install_pkg linux-headers-5.11.0-1025-oracle
-install_pkg linux-headers-oracle
-install_pkg linux-image-5.11.0-1022-oracle
-install_pkg linux-image-5.11.0-1025-oracle
-install_pkg linux-image-oracle
 install_pkg linux-libc-dev
-install_pkg linux-modules-5.11.0-1022-oracle
-install_pkg linux-modules-5.11.0-1025-oracle
-install_pkg linux-modules-extra-5.11.0-1022-oracle
-install_pkg linux-modules-extra-5.11.0-1025-oracle
-install_pkg linux-oracle
-install_pkg linux-oracle-5.11-headers-5.11.0-1022
-install_pkg linux-oracle-5.11-headers-5.11.0-1025
 install_pkg locales
 install_pkg locate
 install_pkg login
@@ -872,7 +859,6 @@ install_pkg lshw
 install_pkg lsof
 install_pkg ltrace
 install_pkg lvm2
-install_pkg lxd-agent-loader
 install_pkg lz4
 install_pkg make
 install_pkg man-db
@@ -1078,7 +1064,6 @@ install_pkg python3-zope.hookable
 install_pkg python3-zope.interface
 install_pkg python3.8
 install_pkg python3.8-dev
-install_pkg python3.8-minimal
 install_pkg qalc
 install_pkg qrencode
 install_pkg quota
