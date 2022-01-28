@@ -669,7 +669,7 @@ install_pkg libpcre2-32-0
 install_pkg libpcre2-8-0
 install_pkg libpcre3
 install_pkg libperl4-corelibs-perl
-install_pkg libperl5.32
+install_pkg libperl-dev
 install_pkg libpipeline1
 install_pkg libpixman-1-0
 install_pkg libplymouth5
@@ -738,7 +738,6 @@ install_pkg libsystemd0
 install_pkg libtasn1-6
 install_pkg libtcl8.6
 install_pkg libtdb1
-install_pkg libterm-spinner-color-perl
 install_pkg libtext-charwidth-perl
 install_pkg libtext-iconv-perl
 install_pkg libtext-wrapi18n-perl
