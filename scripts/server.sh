@@ -71,7 +71,7 @@ install_pkg() {
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 run_update() {
   export DEBIAN_FRONTEND=noninteractive
-  apt() { eval DEBIAN_FRONTEND=noninteractive apt-get $1 -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' --ignore-missing -yy -qq --allow-unauthenticated --assume-yes; }
+  apt() { eval DEBIAN_FRONTEND=noninteractive apt-get "$*" -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' --ignore-missing -yy -qq --allow-unauthenticated --assume-yes; }
   run_external apt clean all
   run_external apt update
   run_external apt upgrade
