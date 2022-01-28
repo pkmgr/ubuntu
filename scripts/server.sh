@@ -1116,15 +1116,11 @@ install_pkg cabextract
 install_pkg cpio
 install_pkg file
 install_pkg gzip
-install_pkg lha
 install_pkg nomarch
 install_pkg pax
-install_pkg rar
 install_pkg unrar
 install_pkg unzip
-install_pkg unzoo
 install_pkg zip
-install_pkg zoo
 
 ##################################################################################################################
 printf_head "Fixing packages"
