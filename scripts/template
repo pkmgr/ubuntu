@@ -4,11 +4,11 @@
 # @Author        : Jason Hempstead
 # @Contact       : jason@casjaysdev.com
 # @License       : WTFPL
-# @ReadME        : server.sh --help
+# @ReadME        : template.sh --help
 # @Copyright     : Copyright: (c) 2021 Jason Hempstead, Casjays Developments
 # @Created       : Thursday, Nov 04, 2021 16:59 EDT
-# @File          : server.sh
-# @Description   : server installer for ubuntu
+# @File          : template.sh
+# @Description   : template installer for ubuntu
 # @TODO          :
 # @Other         :
 # @Resource      :
@@ -18,7 +18,7 @@ VERSION="202111041659-git"
 USER="${SUDO_USER:-${USER}}"
 HOME="${USER_HOME:-${HOME}}"
 SRC_DIR="${BASH_SOURCE%/*}"
-SCRIPT_DESCRIBE="server"
+SCRIPT_DESCRIBE="template"
 SCRIPT_OS="ubuntu"
 GITHUB_USER="${GITHUB_USER:-casjay}"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -54,19 +54,30 @@ test_pkg() {
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 remove_pkg() {
+  aptbin=$(type -P apt || type -P apt-get)
+  apt() { sudo DEBIAN_FRONTEND=noninteractive $aptbin $1 $2 -yy; }
   test_pkg "$1" &>/dev/null &&
-    execute "sudo DEBIAN_FRONTEND=noninteractive apt-get remove $1 -yy" "Removing: $1" ||
+    execute "apt remove $1" "Removing: $1" ||
     printf_green "$1 is not installed"
   setexitstatus
   set --
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 install_pkg() {
-  test_pkg "$1" || execute "sudo DEBIAN_FRONTEND=noninteractive apt-get install $1 -yy" "Installing: $1"
+  aptbin=$(type -P apt || type -P apt-get)
+  apt() { sudo DEBIAN_FRONTEND=noninteractive $aptbin $1 $2 --ignore-missing -yy -qq --allow-unauthenticated --assume-yes; }
+  test_pkg "$1" || execute "apt install $1" "Installing: $1"
   setexitstatus
   set --
 }
-
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+run_update() {
+  aptbin=$(type -P apt || type -P apt-get)
+  apt() { sudo DEBIAN_FRONTEND=noninteractive $aptbin $1 $2 --ignore-missing -yy -qq --allow-unauthenticated --assume-yes; }
+  run_external apt-get clean all
+  run_external apt-get update
+  run_external apt upgrade
+}
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 detect_selinux() {
   builtin command -v selinuxenabled &>/dev/null && selinuxenabled
@@ -123,12 +134,6 @@ run_post() {
   set --
 }
 ##################################################################################################################
-run_update() {
-  run_external apt clean all
-  run_external apt update
-  run_external apt upgrade -yy
-}
-##################################################################################################################
 clear
 ARGS="$*" && shift $#
 ##################################################################################################################
@@ -152,8 +157,8 @@ if ! builtin type -P systemmgr &>/dev/null; then
   run_update
 fi
 printf_green "Installer has been initialized"
-git config --show-scope user.name | grep -q '^' || git config --global user.name "$USER"
-git config --show-scope user.email | grep -q '^' || git config --global user.email "$USER@$HOSTNAME"
+git config --show-scope user.name 2>/dev/null | grep -q '^' || git config --global user.name "$USER"
+git config --show-scope user.email 2>/dev/null | grep -q '^' || git config --global user.email "$USER@$HOSTNAME"
 ##################################################################################################################
 printf_head "Disabling selinux"
 ##################################################################################################################
@@ -170,12 +175,10 @@ if [ -f /etc/makepkg.conf ]; then
     sed -i 's/COMPRESSXZ=(xz -c -z -)/COMPRESSXZ=(xz -c -T '"$numberofcores"' -z -)/g' /etc/makepkg.conf
   fi
 fi
-
 ##################################################################################################################
 printf_head "Grabbing ssh key from github"
 ##################################################################################################################
 ssh_key
-
 ##################################################################################################################
 printf_head "Configuring the system"
 ##################################################################################################################
