@@ -200,9 +200,6 @@ run_grub
 ##################################################################################################################
 printf_head "Installing the packages for $SCRIPT_DESCRIBE"
 ##################################################################################################################install_pkg adduser
-install_pkg apparmor
-install_pkg apport
-install_pkg apport-symptoms
 install_pkg apt
 install_pkg apt-utils
 install_pkg at
@@ -236,10 +233,6 @@ install_pkg clamav-docs
 install_pkg clamav-freshclam
 install_pkg clamav-testfiles
 install_pkg clamdscan
-install_pkg cloud-guest-utils
-install_pkg cloud-init
-install_pkg cloud-initramfs-copymods
-install_pkg cloud-initramfs-dyn-netconf
 install_pkg console-setup
 install_pkg console-setup-linux
 install_pkg coreutils
@@ -261,26 +254,18 @@ install_pkg dialog
 install_pkg dict
 install_pkg diffutils
 install_pkg dirmngr
-install_pkg distro-info
-install_pkg distro-info-data
 install_pkg dmeventd
 install_pkg dmidecode
 install_pkg dmsetup
 install_pkg dns-root-data
 install_pkg dosfstools
-install_pkg dovecot-core
-install_pkg dovecot-imapd
-install_pkg dovecot-pop3d
 install_pkg dpkg
 install_pkg dpkg-dev
 install_pkg e2fsprogs
-install_pkg eatmydata
 install_pkg ed
 install_pkg eject
-install_pkg etckeeper
 install_pkg ethtool
 install_pkg expect
-install_pkg fail2ban
 install_pkg fakeroot
 install_pkg fcgiwrap
 install_pkg fdisk
@@ -854,9 +839,6 @@ install_pkg ncurses-term
 install_pkg net-tools
 install_pkg netbase
 install_pkg netcat-openbsd
-install_pkg netfilter-persistent
-install_pkg nethogs
-install_pkg networkd-dispatcher
 install_pkg nfs-common
 install_pkg nginx-common
 install_pkg nginx-full
@@ -906,7 +888,6 @@ install_pkg pollinate
 install_pkg popularity-contest
 install_pkg postfix
 install_pkg postfix-pcre
-install_pkg postgrey
 install_pkg powermgmt-base
 install_pkg procmail
 install_pkg procps
@@ -1126,11 +1107,6 @@ install_pkg libapache2-mod-fcgid
 install_pkg libapache2-mod-geoip
 install_pkg libapache2-mod-php
 install_pkg bsd-mailx
-install_pkg dovecot
-install_pkg postfix
-install_pkg amavisd-new
-install_pkg spamassassin
-install_pkg clamav-daemon
 install_pkg libnet-dns-perl
 install_pkg libmail-spf-perl
 install_pkg pyzor
