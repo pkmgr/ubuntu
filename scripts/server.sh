@@ -70,7 +70,7 @@ install_pkg() {
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 run_update() {
-  apt() { eval DEBIAN_FRONTEND=noninteractive apt-get $1 $2 --ignore-missing -yy -qq --allow-unauthenticated --assume-yes; }
+  apt() { sudo DEBIAN_FRONTEND=noninteractive apt-get $1 $2 --ignore-missing -yy -qq --allow-unauthenticated --assume-yes; }
   run_external apt-get clean all
   run_external apt-get update
   run_external apt upgrade
