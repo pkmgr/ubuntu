@@ -54,7 +54,8 @@ test_pkg() {
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 remove_pkg() {
-  apt() { sudo DEBIAN_FRONTEND=noninteractive apt-get "$*" -yy; }
+  aptbin=$(type -P apt || type -P apt-get)
+  apt() { sudo DEBIAN_FRONTEND=noninteractive $aptbin $1 $2 -yy; }
   test_pkg "$1" &>/dev/null &&
     execute "apt remove $1" "Removing: $1" ||
     printf_green "$1 is not installed"
