@@ -63,14 +63,16 @@ remove_pkg() {
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 install_pkg() {
-  apt() { sudo DEBIAN_FRONTEND=noninteractive apt-get $1 $2 --ignore-missing -yy -qq --allow-unauthenticated --assume-yes; }
+  aptbin=$(type -P apt || type -P apt-get)
+  apt() { sudo DEBIAN_FRONTEND=noninteractive $aptbin $1 $2 --ignore-missing -yy -qq --allow-unauthenticated --assume-yes; }
   test_pkg "$1" || execute "apt install $1" "Installing: $1"
   setexitstatus
   set --
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 run_update() {
-  apt() { sudo DEBIAN_FRONTEND=noninteractive apt-get $1 $2 --ignore-missing -yy -qq --allow-unauthenticated --assume-yes; }
+  aptbin=$(type -P apt || type -P apt-get)
+  apt() { sudo DEBIAN_FRONTEND=noninteractive $aptbin $1 $2 --ignore-missing -yy -qq --allow-unauthenticated --assume-yes; }
   run_external apt-get clean all
   run_external apt-get update
   run_external apt upgrade
