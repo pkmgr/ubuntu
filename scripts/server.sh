@@ -63,7 +63,7 @@ remove_pkg() {
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 install_pkg() {
-  apt() { sudo DEBIAN_FRONTEND=noninteractive apt-get "$*" -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' --ignore-missing -yy -qq --allow-unauthenticated --assume-yes; }
+  apt() { sudo DEBIAN_FRONTEND=noninteractive apt-get "$*" --ignore-missing -yy -qq --allow-unauthenticated --assume-yes; }
   test_pkg "$1" || execute "apt install $1" "Installing: $1"
   setexitstatus
   set --
@@ -71,9 +71,9 @@ install_pkg() {
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 run_update() {
   export DEBIAN_FRONTEND=noninteractive
-  apt() { eval DEBIAN_FRONTEND=noninteractive apt-get "$*" -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' --ignore-missing -yy -qq --allow-unauthenticated --assume-yes; }
-  run_external apt clean all
-  run_external apt update
+  apt() { eval DEBIAN_FRONTEND=noninteractive apt-get "$*" --ignore-missing -yy -qq --allow-unauthenticated --assume-yes; }
+  run_external apt-get clean all
+  run_external apt-get update
   run_external apt upgrade
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -155,8 +155,8 @@ if ! builtin type -P systemmgr &>/dev/null; then
   run_update
 fi
 printf_green "Installer has been initialized"
-git config --show-scope user.name | grep -q '^' || git config --global user.name "$USER"
-git config --show-scope user.email | grep -q '^' || git config --global user.email "$USER@$HOSTNAME"
+git config --show-scope user.name 2>/dev/null | grep -q '^' || git config --global user.name "$USER"
+git config --show-scope user.email 2>/dev/null | grep -q '^' || git config --global user.email "$USER@$HOSTNAME"
 ##################################################################################################################
 printf_head "Disabling selinux"
 ##################################################################################################################
