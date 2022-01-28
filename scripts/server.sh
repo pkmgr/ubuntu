@@ -1105,6 +1105,7 @@ install_pkg apache2
 install_pkg libapache2-mod-fcgid
 install_pkg libapache2-mod-geoip
 install_pkg libapache2-mod-php
+install_pkg libapache2-mod-proxy-uwsgi
 install_pkg bsd-mailx
 install_pkg libnet-dns-perl
 install_pkg libmail-spf-perl
@@ -1146,6 +1147,7 @@ run_post "dfmgr install vim"
 ##################################################################################################################
 printf_head "Setting up services"
 ##################################################################################################################
+for f in $(ls /etc/apache2/mods-available/); do run_external ln -sf "/etc/apache2/mods-available/$f" "/etc/apache2/mods-enabled/$f"; done
 run_external git clone "https://github.com/casjay-base/ubuntu" "/tmp/ubuntu-repo"
 run_external cp -Rf /tmp/ubuntu-repo/etc/. /etc/
 run_external cp -Rf /tmp/ubuntu-repo/var/. /var/
