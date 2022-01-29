@@ -860,7 +860,7 @@ install_pkg pci.ids
 install_pkg pciutils
 install_pkg perl
 install_pkg perl-base
-install_pkg perl-modules-5.32
+install_pkg perl-modules-5.*
 install_pkg perl-openssl-defaults
 install_pkg php-cgi
 install_pkg php-common
