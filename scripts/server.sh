@@ -1147,7 +1147,7 @@ run_post "dfmgr install vim"
 ##################################################################################################################
 printf_head "Setting up services"
 ##################################################################################################################
-for f in $(ls /etc/apache2/mods-available/); do run_external ln -sf "/etc/apache2/mods-available/$f" "/etc/apache2/mods-enabled/$f"; done
+sudo a2enmod access_compat fcgid expires userdir asis autoindex brotli cgid cgi charset_lite data deflate dir env geoip headers http2 lbmethod_bybusyness lua php7.4 proxy proxy_http2 request rewrite session_dbd speling ssl status vhost_alias xml2enc &>/dev/null
 run_external git clone "https://github.com/casjay-base/ubuntu" "/tmp/ubuntu-repo"
 run_external cp -Rf /tmp/ubuntu-repo/etc/. /etc/
 run_external cp -Rf /tmp/ubuntu-repo/var/. /var/
@@ -1162,6 +1162,10 @@ printf_head "Cleaning up"
 mkdir -p /mnt/backups /var/www/html/.well-known /etc/letsencrypt/live
 run_external rm -Rf /tmp/ubuntu-repo
 remove_pkg snap*
+remove_pkg lockfile-progs
+remove_pkg sendmail-base
+remove_pkg sendmail-cf
+remove_pkg sensible-mda
 
 ##################################################################################################################
 printf_info "Installer version: $(retrieve_version_file)"
