@@ -678,13 +678,13 @@ install_pkg cockpit-pcp
 # install_pkg cockpit-ws  # skipped on ubuntu
 install_pkg coreutils
 install_pkg cowsay
-install_pkg cracklib
-install_pkg cracklib-dicts
+install_pkg libcrack2
+install_pkg cracklib-runtime
 install_pkg cron
 # install_pkg cronie-noanacron  # skipped on ubuntu
 install_pkg cron
 install_pkg curl
-install_pkg ctags
+install_pkg universal-ctags
 # install_pkg deltarpm  # skipped on ubuntu
 install_pkg dialog
 install_pkg docker-ce
@@ -696,7 +696,7 @@ install_pkg libgc-dev
 install_pkg gcc
 install_pkg git
 install_pkg gnupg2
-install_pkg libgnutls-dev
+install_pkg libgnutls30
 install_pkg grub-pc
 # install_pkg grub2-tools-extra  # skipped on ubuntu
 # install_pkg grubby  # skipped on ubuntu
@@ -713,25 +713,25 @@ install_pkg lsof
 install_pkg mailutils
 install_pkg make
 install_pkg man-db
-install_pkg man-pages
+install_pkg manpages
 install_pkg mlocate
 install_pkg libapache2-mod-fcgid
 # install_pkg mod_geoip  # skipped on ubuntu
 # install_pkg mod_http2  # skipped on ubuntu
-install_pkg libapache2-mod-maxminddb
+# install_pkg mod_maxminddb  # skipped on ubuntu
 install_pkg libapache2-mod-perl2
 # install_pkg mod_ssl  # skipped on ubuntu
 install_pkg libapache2-mod-wsgi-py3
-install_pkg libapache2-mod-proxy-html
+# install_pkg mod_proxy_html  # skipped on ubuntu
 install_pkg libapache2-mod-proxy-uwsgi
 install_pkg mosh
 install_pkg mrtg
 install_pkg munin
 install_pkg munin-common
 install_pkg munin-node
-install_pkg ncurses
 install_pkg ncurses-base
-install_pkg ncurses-libs
+install_pkg ncurses-base
+install_pkg libncurses6
 install_pkg net-tools
 install_pkg nginx
 install_pkg ntp
@@ -758,7 +758,7 @@ install_pkg php-mysqlnd
 install_pkg php-pdo
 install_pkg php-pgsql
 install_pkg php-xml
-install_pkg pinentry
+install_pkg pinentry-curses
 install_pkg postfix
 # install_pkg postfix-pcre  # skipped on ubuntu
 install_pkg python3-certbot-dns-rfc2136
@@ -797,11 +797,11 @@ install_pkg webalizer
 install_pkg wget
 install_pkg which
 install_pkg whois
-install_pkg xz
-install_pkg xz-libs
+install_pkg xz-utils
+install_pkg liblzma5
 install_pkg apt-utils
 install_pkg zip
-install_pkg zlib
+install_pkg zlib1g
 ##################################################################################################################
 if [ "$SYSTEM_TYPE" = "dns" ]; then
 	if devnull install_pkg ntp || devnull install_pkg ntpsec; then
