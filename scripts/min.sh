@@ -629,7 +629,6 @@ install_pkg curl
 install_pkg git
 install_pkg mailutils
 install_pkg e2fsprogs
-install_pkg lsb-release
 install_pkg vim
 install_pkg unzip
 install_pkg bind9
@@ -637,7 +636,6 @@ install_pkg dnsutils
 rm_if_exists /tmp/dotfiles
 rm_if_exists /root/anaconda-ks.cfg /var/log/anaconda
 run_external "apt-get upgrade -y -q"
-[ $RELEASE_VER -ge 9 ] && install_pkg glibc-langpack-en
 ##################################################################################################################
 printf_head "Enabling ip forwarding"
 ##################################################################################################################
@@ -685,7 +683,6 @@ install_pkg cron
 install_pkg cron
 install_pkg curl
 install_pkg universal-ctags
-# install_pkg deltarpm  # skipped on ubuntu
 install_pkg dialog
 install_pkg docker-ce
 install_pkg ethtool
@@ -802,6 +799,16 @@ install_pkg liblzma5
 install_pkg apt-utils
 install_pkg zip
 install_pkg zlib1g
+##################################################################################################################
+printf_head "Installing version-specific packages"
+##################################################################################################################
+# Detect installed PHP version for dynamic config path construction
+# (PHP paths in this script use ${PHP_VER} — set it before any config copy operations)
+PHP_VER="$(php --version 2>/dev/null | awk 'NR==1{print $2}' | cut -d. -f1,2)"
+[ -z "$PHP_VER" ] && PHP_VER="$(ls /etc/php/ 2>/dev/null | grep -E -- '^[0-9]' | sort -V | tail -1)"
+[ -z "$PHP_VER" ] && PHP_VER="8.2"
+# lsb-release: available on all supported Debian/Ubuntu versions
+install_pkg lsb-release
 ##################################################################################################################
 if [ "$SYSTEM_TYPE" = "dns" ]; then
 	if devnull install_pkg ntp || devnull install_pkg ntpsec; then
@@ -1247,9 +1254,9 @@ if [ -n "$GET_WEB_USER" ]; then
 		sed -i '0,/^user .*/s//user  '$GET_WEB_USER';/' "/etc/nginx/nginx.conf"
 		grep -sqh "^user  $GET_WEB_USER" "/etc/nginx/nginx.conf" || echo "Failed to change the user in /etc/nginx/nginx.conf"
 	fi
-	if [ -f "/etc/php/8.2/fpm/pool.d/www.conf" ]; then
-		sed -i '0,/^user .*/s//user = '$GET_WEB_USER'/' "/etc/php/8.2/fpm/pool.d/www.conf"
-		grep -sqh "^user = $GET_WEB_USER" "/etc/php/8.2/fpm/pool.d/www.conf" || echo "Failed to change the user in /etc/php/8.2/fpm/pool.d/www.conf"
+	if [ -f "/etc/php/${PHP_VER}/fpm/pool.d/www.conf" ]; then
+		sed -i '0,/^user .*/s//user = '$GET_WEB_USER'/' "/etc/php/${PHP_VER}/fpm/pool.d/www.conf"
+		grep -sqh "^user = $GET_WEB_USER" "/etc/php/${PHP_VER}/fpm/pool.d/www.conf" || echo "Failed to change the user in /etc/php/${PHP_VER}/fpm/pool.d/www.conf"
 	fi
 	if [ -f "/etc/apache2/conf/httpd.conf" ]; then
 		sed -i '0,/^User .*/s//User '$GET_WEB_USER'/' "/etc/apache2/conf/httpd.conf"
@@ -1260,9 +1267,9 @@ if [ -n "$GET_WEB_USER" ]; then
 	done
 fi
 if [ -n "$GET_WEB_GROUP" ]; then
-	if [ -f "/etc/php/8.2/fpm/pool.d/www.conf" ]; then
-		sed -i '0,/^group .*/s//group = '$GET_WEB_GROUP'/' "/etc/php/8.2/fpm/pool.d/www.conf"
-		grep -sqh "^group = $GET_WEB_GROUP" "/etc/php/8.2/fpm/pool.d/www.conf" || echo "Failed to change the group in /etc/php/8.2/fpm/pool.d/www.conf"
+	if [ -f "/etc/php/${PHP_VER}/fpm/pool.d/www.conf" ]; then
+		sed -i '0,/^group .*/s//group = '$GET_WEB_GROUP'/' "/etc/php/${PHP_VER}/fpm/pool.d/www.conf"
+		grep -sqh "^group = $GET_WEB_GROUP" "/etc/php/${PHP_VER}/fpm/pool.d/www.conf" || echo "Failed to change the group in /etc/php/${PHP_VER}/fpm/pool.d/www.conf"
 	fi
 	if [ -f "/etc/apache2/conf/httpd.conf" ]; then
 		sed -i '0,/^Group .*/s//Group '$GET_WEB_GROUP'/' "/etc/apache2/conf/httpd.conf"
