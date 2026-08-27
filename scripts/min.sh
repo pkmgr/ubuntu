@@ -903,6 +903,7 @@ printf_head "setting up config files"
 ##################################################################################################################
 set_domainname="$(domain_name)"
 myhostnameshort="$SET_HOSTNAME"
+myserverhostname="$(hostname -f)"
 myserverdomainname="$(hostname -f)"
 NETDEV=""
 while read -r _dev; do
@@ -945,6 +946,7 @@ devnull find "$CONFIG_TEMP_DIR" -type f -iname "*.cgi" -exec chmod 755 {} \;
 devnull find "$CONFIG_TEMP_DIR" -type f -iname ".gitkeep" -exec rm -Rf {} \;
 devnull find "$CONFIG_TEMP_DIR" -type f -exec sed -i "s#mydomainname#$set_domainname#g" {} \;
 devnull find "$CONFIG_TEMP_DIR" -type f -exec sed -i "s#myhostnameshort#$myhostnameshort#g" {} \;
+devnull find "$CONFIG_TEMP_DIR" -type f -exec sed -i "s#myserverhostname#$myserverhostname#g" {} \;
 devnull find "$CONFIG_TEMP_DIR" -type f -exec sed -i "s#myserverdomainname#$myserverdomainname#g" {} \;
 devnull find "$CONFIG_TEMP_DIR" -type f -exec sed -i "s#mycurrentipaddress_6#$mycurrentipaddress_6#g" {} \;
 devnull find "$CONFIG_TEMP_DIR" -type f -exec sed -i "s#mycurrentipaddress_4#$mycurrentipaddress_4#g" {} \;
