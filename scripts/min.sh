@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-##@Version           :  202211071239-git
+##@Version           :  202609122155-git
 # @@Author           :  Jason Hempstead
 # @@Contact          :  jason@casjaysdev.pro
 # @@License          :  WTFPL
@@ -27,7 +27,7 @@
 # shellcheck disable=SC2317
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 APPNAME="min-ubuntu"
-VERSION="202211071239-git"
+VERSION="202609122155-git"
 USER="${SUDO_USER:-${USER}}"
 HOME="${USER_HOME:-${HOME}}"
 CONFIG_TEMP_DIR="${TMPDIR:-/tmp}/minConfigFiles"
@@ -180,7 +180,7 @@ SCRIPT_NAME="$APPNAME"
 SCRIPT_NAME="${SCRIPT_NAME%.*}"
 RELEASE_VER="$(. /etc/os-release 2>/dev/null; echo "${VERSION_ID%%.*}")"
 RELEASE_NAME="$(. /etc/os-release 2>/dev/null; n="${NAME,,}"; echo "${n%% *}")"
-RELEASE_TYPE="$(. /etc/os-release 2>/dev/null; [[ " $ID_LIKE " == *centos* ]] && echo "ubuntu")"
+RELEASE_TYPE="$(. /etc/os-release 2>/dev/null; { [[ " $ID_LIKE " == *debian* ]] || [ "$ID" = "debian" ]; } && echo "ubuntu")"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 DEFAULT_KERNEL="${DEFAULT_KERNEL:-kernel-ml}"
 ARCH="$(uname -m | tr '[:upper:]' '[:lower:]')"
@@ -203,9 +203,11 @@ case "${SET_HOSTNAME:-$HOSTNAME}" in
 	devel*|build*|ci*|testing*)      SYSTEM_TYPE="devel" ;;
 esac
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-SERVICES_ENABLE="cockpit cockpit.socket docker apache2 munin-node nginx php-fpm postfix proftpd rsyslog snmpd sshd uptimed downtimed "
+SERVICES_ENABLE="cockpit cockpit.socket docker apache2 fail2ban munin-node nginx php-fpm postfix proftpd rsyslog ufw snmpd sshd uptimed downtimed "
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-SERVICES_DISABLE="avahi-daemon.service avahi-daemon.socket cups.path cups.service cups.socket dhcpd dhcpd6 dm-event.socket fail2ban irqbalance.service iscsi iscsid.socket iscsiuio.socket lvm2-lvmetad.socket lvm2-lvmpolld.socket lvm2-monitor mdmonitor named nfs-client.target radvd rpcbind.service rpcbind.socket smb sssd-kcm.socket udisks2.service"
+SERVICES_DISABLE="avahi-daemon.service avahi-daemon.socket cups.path cups.service cups.socket dhcpd dhcpd6 dm-event.socket irqbalance.service iscsi \
+iscsid.socket iscsiuio.socket lvm2-lvmetad.socket lvm2-lvmpolld.socket lvm2-monitor mdmonitor named nfs-client.target radvd rpcbind.service \
+rpcbind.socket smb sssd-kcm.socket udisks2.service"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 if ! grep --no-filename -sE '^ID=|^ID_LIKE=|^NAME=' /etc/*-release | grep -qiwE "ubuntu"; then
 	printf_exit "This installer is meant to be run on a $SCRIPT_OS based system"
@@ -731,7 +733,6 @@ install_pkg ncurses-base
 install_pkg libncurses6
 install_pkg net-tools
 install_pkg nginx
-install_pkg ntp
 install_pkg libpam-mkhomedir
 install_pkg openssh-server
 install_pkg openssl
@@ -746,11 +747,6 @@ install_pkg libdbd-mariadb-perl
 # Enable Remi PHP 7.4 module stream before installing PHP packages.
 # casjay.repo excludes php* from AppStream to force Remi; the module must
 # be enabled first and AppStream excludes bypassed so dnf resolves from Remi.
-if type -P dnf >/dev/null 2>&1 && dnf module list php 2>/dev/null | grep -q 'remi-7.4'; then
-	dnf module reset php -y >/dev/null 2>&1 || true
-	dnf module enable php:remi-7.4 -y >/dev/null 2>&1 || true
-	_php_install_opts="--disableexcludes=casjay-os-appstream"
-fi
 install_pkg php $_php_install_opts
 install_pkg php-cli $_php_install_opts
 install_pkg php-common $_php_install_opts
@@ -836,6 +832,7 @@ run_grub
 ##################################################################################################################
 printf_head "Installing custom web server files"
 ##################################################################################################################
+if [ "${CONFIG_SETUP:-yes}" != "no" ]; then
 [ -d "$CONFIG_TEMP_DIR" ] && devnull rm_if_exists "$CONFIG_TEMP_DIR"
 devnull git clone -q "https://github.com/casjay-base/ubuntu" "$CONFIG_TEMP_DIR"
 if [ -d "/var/www/html/sysinfo/.git" ]; then
@@ -952,18 +949,35 @@ devnull find "$CONFIG_TEMP_DIR" -type f -exec sed -i "s#mycurrentipaddress_6#$my
 devnull find "$CONFIG_TEMP_DIR" -type f -exec sed -i "s#mycurrentipaddress_4#$mycurrentipaddress_4#g" {} \;
 if [ -n "$NETDEV" ]; then
 	fix_network_device_name "$CONFIG_TEMP_DIR"
-	if [ -f "/etc/sysconfig/network-scripts/ifcfg-eth0.sample" ]; then
-		devnull mv -f "/etc/sysconfig/network-scripts/ifcfg-eth0.sample" "/etc/sysconfig/network-scripts/ifcfg-$NETDEV.sample"
+	if [ -f "/etc/default/network-scripts/ifcfg-eth0.sample" ]; then
+		devnull mv -f "/etc/default/network-scripts/ifcfg-eth0.sample" "/etc/default/network-scripts/ifcfg-$NETDEV.sample"
 	fi
 fi
 if [ -z "$does_lo_have_ipv6" ]; then
 	sed -i 's|inet_interfaces.*|inet_interfaces = 127.0.0.1|g' $CONFIG_TEMP_DIR/etc/postfix/main.cf
 fi
-devnull rm_if_exists $CONFIG_TEMP_DIR/etc/{fail2ban,shorewall,shorewall6}
+for fwdir in fail2ban ufw; do
+	if [ -d "/etc/$fwdir" ]; then
+		devnull rm_if_exists "$CONFIG_TEMP_DIR/etc/$fwdir"
+	fi
+done
 devnull mkdir -p /etc/rsync.d /var/log/named
 devnull rsync -avhP $CONFIG_TEMP_DIR/{etc,root,usr,var}* /
-devnull sed -i "s#myserverdomainname#$HOSTNAME#g" /etc/sysconfig/network
-devnull sed -i "s#mydomain#$set_domainname#g" /etc/sysconfig/network
+fi
+if [ -f "/etc/fail2ban/jail.local" ]; then
+	# Every jail in jail.local is permanently enabled - min.sh only runs
+	# once, at bootstrap, so a jail could never be enabled later if it
+	# depended on detecting the service at bootstrap time. Instead we just
+	# make sure each jail's logpath exists (as an empty file, if needed) so
+	# fail2ban never errors on a missing log; once the real service is
+	# installed and starts writing to that same path, the already-running
+	# jail picks it up immediately with no further changes here.
+	devnull mkdir -p /var/log/proftpd /var/log/apache2 /var/log/nginx /var/log/named /var/log/mysql /var/opt/mssql/log
+	devnull touch /var/log/proftpd/auth.log /var/log/apache2/error_log /var/log/nginx/error.log /var/log/nginx/access.log
+	devnull touch /var/log/named/security.log /var/log/mysql/mysql.log /var/opt/mssql/log/errorlog /var/log/mail.log /var/log/auth.log
+fi
+devnull sed -i "s#myserverdomainname#$HOSTNAME#g" /etc/default/network
+devnull sed -i "s#mydomain#$set_domainname#g" /etc/default/network
 devnull chmod 644 -Rf /etc/cron.d/* /etc/logrotate.d/*
 devnull touch /etc/postfix/mydomains.pcre
 devnull chattr +i /etc/resolv.conf
@@ -1393,6 +1407,16 @@ elif [ "$SYSTEM_TYPE" = "dns" ] || [ "$set_domainname" = "casjaydns.com" ]; then
 	fi
 fi
 ##################################################################################################################
+printf_head "Installing and enabling intrusion detection/prevention"
+##################################################################################################################
+install_pkg fail2ban
+install_pkg ufw
+install_pkg rkhunter
+if type -P rkhunter >/dev/null 2>&1; then
+	devnull rkhunter --propupd
+	devnull rkhunter --update
+fi
+##################################################################################################################
 printf_head "Enabling services"
 ##################################################################################################################
 for service_enable in $SERVICES_ENABLE; do
@@ -1451,7 +1475,6 @@ unset user_spec SETUP_ACCOUNT_NEXT_UID
 ##################################################################################################################
 printf_head "Cleaning up"
 ##################################################################################################################
-[ -f "/etc/yum/pluginconf.d/subscription-manager.conf" ] && echo "" >"/etc/yum/pluginconf.d/subscription-manager.conf"
 find "/etc" "/usr" "/var" -iname '*.rpmnew' -exec rm -Rf {} \; >/dev/null 2>&1
 find "/etc" "/usr" "/var" -iname '*.rpmsave' -exec rm -Rf {} \; >/dev/null 2>&1
 devnull rm -Rf /tmp/*.tar "/tmp/dotfiles" "$CONFIG_TEMP_DIR"
