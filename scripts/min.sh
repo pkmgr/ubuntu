@@ -153,19 +153,113 @@ if [ ! -d "/usr/local/share/CasjaysDev/scripts" ]; then
 	sleep 5
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Set functions
-SCRIPTSFUNCTURL="${SCRIPTSFUNCTURL:-https://github.com/casjay-dotfiles/scripts/raw/main/functions}"
-SCRIPTSFUNCTDIR="${SCRIPTSFUNCTDIR:-/usr/local/share/CasjaysDev/scripts}"
-SCRIPTSFUNCTFILE="${SCRIPTSFUNCTFILE:-system-installer.bash}"
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-if [ -f "../functions/$SCRIPTSFUNCTFILE" ]; then
-	. "../functions/$SCRIPTSFUNCTFILE"
-elif [ -f "$SCRIPTSFUNCTDIR/functions/$SCRIPTSFUNCTFILE" ]; then
-	. "$SCRIPTSFUNCTDIR/functions/$SCRIPTSFUNCTFILE"
+# Vendored from casjay-dotfiles/scripts system-installer.bash (self-contained,
+# no network fetch) - only the functions this script actually calls.
+if [ -n "${NO_COLOR+x}" ] || [ "$SHOW_RAW" = "true" ]; then
+	printf_color() { printf '%b' "$1" | tr -d '\t'; }
 else
-	curl -LSs "$SCRIPTSFUNCTURL/$SCRIPTSFUNCTFILE" -o "/tmp/$SCRIPTSFUNCTFILE" || exit 1
-	. "/tmp/$SCRIPTSFUNCTFILE"
+	printf_color() { printf "%b" "$(tput setaf "$2" 2>/dev/null)" "$1" "$(tput sgr0 2>/dev/null)"; }
 fi
+printf_green() { printf_color "$1\n" 2; }
+printf_red() { printf_color "$1\n" 208; }
+printf_yellow() { printf_color "$1\n" 3; }
+printf_blue() { printf_color "$1\n" 33; }
+printf_cyan() { printf_color "$1\n" 6; }
+printf_exit() {
+	printf_color "$1\n" 208 1>&2
+	exit 1
+}
+printf_execute_success() { printf_color "[ ✔ ] $1 \n" 2; }
+printf_execute_error() { printf_color "[ ✖ ] $1 $2 \n" 1; }
+printf_execute_error_stream() { while read -r line; do printf_execute_error "↳ ERROR: $line"; done; }
+printf_execute_result() {
+	if [ "$1" -eq 0 ]; then printf_execute_success "$2"; else printf_execute_error "$2"; fi
+	return "$1"
+}
+printf_return() {
+	test -n "$1" && test -z "${1//[0-9]/}" && local color="$1" && shift 1 || local color="208"
+	test -n "$1" && test -z "${1//[0-9]/}" && local exitCode="$1" && shift 1 || local exitCode="1"
+	local msg="$*"
+	[ ${#msg} = 0 ] || { printf_color "$msg" "$color" 1>&2 && printf "\n"; }
+	return ${exitCode:-2}
+}
+devnull() { "$@" >/dev/null 2>&1; }
+urlcheck() { devnull curl --output /dev/null --silent --head --fail "$1"; }
+urlinvalid() {
+	if [ -z "$1" ]; then
+		printf_red "Invalid URL\n"
+	else
+		printf_red "Can't find $1\n"
+	fi
+	exit 1
+}
+urlverify() { urlcheck $1 || urlinvalid $1; }
+setexitstatus() {
+	EXIT="${EXIT:-$?}"
+	local EXITSTATUS+="$EXIT"
+	if [ -z "$EXITSTATUS" ] || [ "$EXITSTATUS" -ne 0 ]; then
+		BG_EXIT="${BG_RED}"
+		return 1
+	else
+		BG_EXIT="${BG_GREEN}"
+		return 0
+	fi
+}
+set_trap() { trap -p "$1" | grep "$2" &>/dev/null || trap "$2" "$1"; }
+execute() {
+	kill_all_subprocesses() {
+		local i=""
+		for i in $(jobs -p); do
+			kill "$i"
+			wait "$i" &>/dev/null
+		done
+	}
+	show_spinner() {
+		local -r FRAMES='/-\|'
+		local -r NUMBER_OR_FRAMES=${#FRAMES}
+		local -r CMDS="$2"
+		local -r MSG="$3"
+		local -r PID="$1"
+		local i=0
+		local frameText=""
+		if [ "$TRAVIS" != "true" ]; then
+			printf "\n\n\n"
+			tput cuu 3
+			tput sc
+		fi
+		while kill -0 "$PID" &>/dev/null; do
+			frameText="[ ${FRAMES:i++%NUMBER_OR_FRAMES:1} ] $MSG"
+			if [ "$TRAVIS" != "true" ]; then
+				printf "%s\n" "$frameText"
+			else
+				printf "%s" "$frameText"
+			fi
+			sleep 0.2
+			if [ "$TRAVIS" != "true" ]; then
+				tput rc
+			else
+				printf "\r"
+			fi
+		done
+	}
+	local -r CMDS="$1"
+	local -r MSG="${2:-$1}"
+	local -r TMP_FILE="$(mktemp /tmp/XXXXX)"
+	local exitCode=0
+	local cmdsPID=""
+	set_trap "EXIT" "kill_all_subprocesses"
+	eval "$CMDS" >/dev/null 2>"$TMP_FILE" &
+	cmdsPID=$!
+	show_spinner "$cmdsPID" "$CMDS" "$MSG"
+	wait "$cmdsPID" &>/dev/null
+	exitCode=$?
+	printf_execute_result $exitCode "$MSG"
+	if [ $exitCode -ne 0 ]; then
+		printf_execute_error_stream <"$TMP_FILE"
+	fi
+	rm -rf "$TMP_FILE"
+	return $exitCode
+}
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 SCRIPT_OS="Ubuntu"
 SCRIPT_DESCRIBE="Minimal"
