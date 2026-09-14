@@ -190,8 +190,8 @@ urlinvalid() {
 		printf_red "Invalid URL\n"
 	else
 		printf_red "Can't find $1\n"
+		exit 1
 	fi
-	exit 1
 }
 urlverify() { urlcheck $1 || urlinvalid $1; }
 setexitstatus() {
@@ -205,7 +205,7 @@ setexitstatus() {
 		return 0
 	fi
 }
-set_trap() { trap -p "$1" | grep "$2" &>/dev/null || trap "$2" "$1"; }
+set_trap() { trap -p "$1" | grep -- "$2" &>/dev/null || trap "$2" "$1"; }
 execute() {
 	kill_all_subprocesses() {
 		local i=""
