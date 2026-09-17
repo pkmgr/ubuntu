@@ -32,6 +32,9 @@ USER="${SUDO_USER:-${USER}}"
 HOME="${USER_HOME:-${HOME}}"
 CONFIG_TEMP_DIR="${TMPDIR:-/tmp}/minConfigFiles"
 PKMGR_FORCE_INSTALL="${PKMGR_FORCE_INSTALL:-no}"
+# a hardened root umask of 077 would otherwise be baked into every file and
+# directory this script creates and then rsynced onto /etc, /usr and /var
+umask 022
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set bash options
 if [ "$1" = "--debug" ]; then shift 1 && set -xo pipefail && export SCRIPT_OPTS="--debug" && export _DEBUG="on"; fi
@@ -1024,6 +1027,10 @@ if [ -z "$mycurrentipaddress_4" ] || [ -z "$mycurrentipaddress_6" ]; then
 fi
 mycurrentipaddress_4="${mycurrentipaddress_4:-127.0.0.1}"
 mycurrentipaddress_6="${mycurrentipaddress_6:-::1}"
+# rsync -a below copies these modes onto the live /etc, /usr and /var, so the
+# checked-out tree must carry system defaults rather than the caller's umask
+__devnull find "$CONFIG_TEMP_DIR" -type d -exec chmod 755 {} \;
+__devnull find "$CONFIG_TEMP_DIR" -type f -exec chmod 644 {} \;
 __devnull find "$CONFIG_TEMP_DIR" -type f -iname "*.sh" -exec chmod 755 {} \;
 __devnull find "$CONFIG_TEMP_DIR" -type f -iname "*.pl" -exec chmod 755 {} \;
 __devnull find "$CONFIG_TEMP_DIR" -type f -iname "*.cgi" -exec chmod 755 {} \;
@@ -1043,6 +1050,10 @@ fi
 __devnull __rm_if_exists $CONFIG_TEMP_DIR/etc/{shorewall,shorewall6}
 __devnull mkdir -p /etc/rsync.d /var/log/named
 __devnull rsync -avhP $CONFIG_TEMP_DIR/{etc,root,usr,var}* /
+# the tree-wide 644 above must never reach private key material or /root
+__devnull find /etc/ssl /etc/pki /etc/cockpit -type f -name "*.key" -exec chmod 600 {} \;
+__devnull find /etc/ssl/CA/CasjaysDev/private -type d -exec chmod 700 {} \;
+__devnull chmod 700 /root
 # mod_geoip has no installable package on EL9/10 (the legacy Apache GeoIP
 # module was retired); guard the deployed apache2.conf so apache2 can still
 # start when it's missing, without touching hosts where it's installed
