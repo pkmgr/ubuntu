@@ -303,7 +303,7 @@ SERVICES_DISABLE="avahi-daemon.service avahi-daemon.socket cups.path cups.servic
 iscsid.socket iscsiuio.socket lvm2-lvmetad.socket lvm2-lvmpolld.socket lvm2-monitor mdmonitor named nfs-client.target radvd rpcbind.service \
 rpcbind.socket smb sssd-kcm.socket udisks2.service"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-if ! grep --no-filename -sE '^ID=|^ID_LIKE=|^NAME=' /etc/*-release | grep -qiwE -- "ubuntu"; then
+if ! grep --no-filename -sE -- '^ID=|^ID_LIKE=|^NAME=' /etc/*-release | grep -qiwE -- "ubuntu"; then
 	__printf_exit "This installer is meant to be run on a $SCRIPT_OS based system"
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -312,7 +312,7 @@ __port_in_use() { netstatg 2>&1 | awk '{print $4}' | grep -- ':[0-9]' | awk -F':
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 __system_service_exists() { systemctl status "$1" 2>&1 | grep -- 'Loaded:' | grep -iq -- "$1" && return 0 || return 1; }
 __system_service_active() { (systemctl is-enabled "$1" || systemctl is-active "$1") | grep -qiE -- 'enabled|active' || return 1; }
-system_service_enable() { systemctl status "$1" 2>&1 | grep -iq 'inactive' && __execute "systemctl enable --now $1" "Enabling service: $1" || return 1; }
+system_service_enable() { systemctl is-enabled --quiet "$1" 2>/dev/null || __execute "systemctl enable --now $1" "Enabling service: $1" || return 1; }
 system_service_disable() { systemctl is-active --quiet "$1" && __execute "systemctl disable --now $1" "Disabling service: $1" || return 1; }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 __does_user_exist() { grep -qs -- "^$1:" "/etc/passwd" || return 1; }
@@ -323,7 +323,7 @@ __get_www_user() {
 	while IFS=: read -r u _; do
 		case "$u" in www-data|apache|nginx) echo "$u"; return 0 ;; esac
 	done </etc/passwd
-	return 9
+	return 1
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 __get_www_group() {
@@ -331,7 +331,7 @@ __get_www_group() {
 	while IFS=: read -r g _; do
 		case "$g" in www-data|apache|nginx) echo "$g"; return 0 ;; esac
 	done </etc/group
-	return 9
+	return 1
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 __copy_ca_certs() {
@@ -531,6 +531,10 @@ __run_grub() {
 		if [ -n "$grub_efi" ]; then
 			for efi in $grub_efi; do
 				if [ -e "$efi" ]; then
+					# EL9+/Fedora/Debian ship /boot/efi/EFI/{distro}/grub.cfg as a stub that only chainloads the real grub.cfg - grub-mkconfig refuses to overwrite it, so skip it
+					if grep -qs -- 'configfile' "$efi" && ! grep -qs -- 'BEGIN /etc/grub.d/' "$efi"; then
+						continue
+					fi
 					if __devnull $grub_bin -o "$efi"; then
 						__printf_green "Updated $efi"
 					else
@@ -1070,7 +1074,7 @@ if [ -f "/etc/fail2ban/jail.local" ]; then
 	# jail picks it up immediately with no further changes here.
 	__devnull mkdir -p /var/log/proftpd /var/log/apache2 /var/log/nginx /var/log/named /var/log/mysql /var/opt/mssql/log
 	__devnull touch /var/log/proftpd/auth.log /var/log/apache2/error_log /var/log/nginx/error.log /var/log/nginx/access.log
-	__devnull touch /var/log/named/security.log /var/log/mysql/mysql.log /var/opt/mssql/log/errorlog /var/log/mail.log /var/log/auth.log
+	__devnull touch /var/log/named/security.log /var/log/mysql/mysql.log /var/opt/mssql/log/errorlog /var/log/mail.log /var/log/auth.log /var/log/fail2ban.log
 fi
 __devnull sed -i "s#myserverdomainname#$HOSTNAME#g" /etc/default/network
 __devnull sed -i "s#mydomain#$set_domainname#g" /etc/default/network
