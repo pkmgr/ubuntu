@@ -144,8 +144,8 @@ __execute() {
 cat /etc/*-release | grep -E -- 'ID=|ID_LIKE=' | grep -qwE -- "$SCRIPT_OS" &>/dev/null && true || __printf_exit "This installer is meant to be run on a $SCRIPT_OS based system"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 system_service_exists() { systemctl status "$1" 2>&1 | grep -iq -- "$1" && return 0 || return 1; }
-system_service_enable() { systemctl is-enabled --quiet "$1" 2>/dev/null || __execute "systemctl enable $1" "Enabling service: $1" || return 1; }
-system_service_disable() { systemctl status "$1" 2>&1 | grep -iq -- 'active' && __execute "systemctl disable --now $1" "Disabling service: $1" || return 1; }
+__system_service_enable() { systemctl is-enabled --quiet "$1" 2>/dev/null || __execute "systemctl enable $1" "Enabling service: $1" || return 1; }
+__system_service_disable() { systemctl status "$1" 2>&1 | grep -iq -- 'active' && __execute "systemctl disable --now $1" "Disabling service: $1" || return 1; }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 test_pkg() {
   dpkg --get-selections "$1" 2>/dev/null | grep -qw -- "$1" &&
@@ -164,7 +164,7 @@ remove_pkg() {
   set --
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-install_pkg() {
+__install_pkg() {
   aptbin=$(type -P apt || type -P apt-get)
   apt() { sudo DEBIAN_FRONTEND=noninteractive $aptbin $1 $2 --ignore-missing -yy -qq --allow-unauthenticated --assume-yes; }
   test_pkg "$1" || __execute "apt install $1" "Installing: $1"
@@ -284,15 +284,15 @@ ssh_key
 __printf_head "Configuring the system"
 ##################################################################################################################
 run_update
-install_pkg vnstat
-system_service_enable vnstat
-install_pkg net-tools
-install_pkg wget
-install_pkg curl
-install_pkg git
-install_pkg e2fsprogs
-install_pkg lsb-release
-install_pkg unzip
+__install_pkg vnstat
+__system_service_enable vnstat
+__install_pkg net-tools
+__install_pkg wget
+__install_pkg curl
+__install_pkg git
+__install_pkg e2fsprogs
+__install_pkg lsb-release
+__install_pkg unzip
 run_external rm -Rf /tmp/dotfiles
 run_external timedatectl set-timezone America/New_York
 run_update
@@ -300,8 +300,8 @@ run_grub
 
 ##################################################################################################################
 __printf_head "Installing the packages for $SCRIPT_DESCRIBE"
-##################################################################################################################install_pkg adduser
-install_pkg apt
+##################################################################################################################__install_pkg adduser
+__install_pkg apt
 
 ##################################################################################################################
 __printf_head "Fixing packages"
@@ -325,8 +325,8 @@ run_post "dfmgr install vim"
 ##################################################################################################################
 __printf_head "Setting up services"
 ##################################################################################################################
-#system_service_enable apache2
-#system_service_disable nginx
+#__system_service_enable apache2
+#__system_service_disable nginx
 
 ##################################################################################################################
 __printf_head "Cleaning up"
