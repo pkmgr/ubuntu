@@ -309,7 +309,7 @@ case "${SET_HOSTNAME:-$HOSTNAME}" in
 	devel*|build*|ci*|testing*)      SYSTEM_TYPE="devel" ;;
 esac
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-SERVICES_ENABLE="cockpit cockpit.socket docker apache2 munin-node nginx php-fpm postfix proftpd rsyslog snmpd sshd uptimed downtimed "
+SERVICES_ENABLE="cockpit cockpit.socket docker apache2 fail2ban munin-node nginx php-fpm postfix proftpd rsyslog snmpd sshd uptimed downtimed "
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 SERVICES_DISABLE="avahi-daemon.service avahi-daemon.socket cups.path cups.service cups.socket dhcpd dhcpd6 dm-event.socket fail2ban irqbalance.service iscsi iscsid.socket iscsiuio.socket lvm2-lvmetad.socket lvm2-lvmpolld.socket lvm2-monitor mdmonitor named nfs-client.target radvd rpcbind.service rpcbind.socket smb sssd-kcm.socket udisks2.service"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1576,14 +1576,21 @@ fi
 ##################################################################################################################
 __printf_head "Configuring the firewall"
 ##################################################################################################################
+# Firewall policy (AI.md's "Firewall policy" section): allow everything
+# by default, fail2ban is the actual protection layer - a default-deny
+# posture here contradicts that policy. SMB/NetBIOS is the one static
+# exception, dropped outright (ufw's own terminology: "deny" is a
+# silent DROP, "reject" sends a reply confirming something is
+# listening - deny is what we want here). docker manages its own
+# iptables rules directly and has never actually been gated by ufw's
+# INPUT policy either way, so this change has no effect on docker/
+# incus/libvirt/podman networking.
 __devnull apt-get install -y -q ufw
 __devnull ufw --force reset
-__devnull ufw default deny incoming
+__devnull ufw default allow incoming
 __devnull ufw default allow outgoing
-__devnull ufw allow ssh
-__devnull ufw allow http
-__devnull ufw allow https
-__devnull ufw allow 60000:61000/udp
+__devnull ufw deny proto tcp to any port 139,445
+__devnull ufw deny proto udp to any port 137,138
 __devnull ufw --force enable
 ##################################################################################################################
 __printf_head "Disabling dnsmasq"
